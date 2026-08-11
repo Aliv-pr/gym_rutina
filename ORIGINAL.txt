@@ -1,2 +1,0 @@
-Origen: rutinas-fuerza.jsx proporcionado por el usuario.
-Adaptación: proyecto Vite + React + Tailwind + GitHub Pages; window.storage -> localStorage.
