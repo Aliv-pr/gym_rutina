@@ -34,7 +34,7 @@ const MUSCLES = [
   "Pecho",
   "Dorsales",
   "Espalda alta",
-  "hHombro",
+  "Hombro",
   "Bíceps",
   "Tríceps",
   "Cuádriceps",
@@ -45,19 +45,29 @@ const MUSCLES = [
 ];
 
 const SEED_EXERCISES = [
+  // --- PRIORIDAD 10: Compuestos Pesados / Multiarticulares Principales ---
   { id: "ex-sentadilla", name: "Sentadilla", priority: 10, function: "Dominante de rodilla", muscles: ["Cuádriceps", "Glúteos"] },
-  { id: "ex-dominadas", name: "Dominadas", priority: 9, function: "Tirón vertical", muscles: ["Dorsales", "Bíceps"] },
-  { id: "ex-press-inclinado", name: "Press inclinado", priority: 8, function: "Press principal", muscles: ["Pecho", "Hombro", "Tríceps"] },
-  { id: "ex-peso-muerto-rumano", name: "Peso muerto rumano", priority: 7, function: "Bisagra", muscles: ["Isquiosurales", "Glúteos", "Erectores"] },
-  { id: "ex-remo-t", name: "Remo en T", priority: 6, function: "Tirón horizontal", muscles: ["Espalda alta", "Dorsales", "Bíceps"] },
-  { id: "ex-elev-laterales", name: "Elevaciones laterales", priority: 5, function: "Aislamiento de hombro", muscles: ["Hombro"] },
-  { id: "ex-curl-predicador", name: "Curl predicador", priority: 4, function: "Bíceps", muscles: ["Bíceps"] },
-  { id: "ex-ext-triceps", name: "Extensión de tríceps sobre cabeza", priority: 3, function: "Tríceps", muscles: ["Tríceps"] },
-  { id: "ex-bulgaras", name: "Búlgaras", priority: 2, function: "Unilateral / cuádriceps", muscles: ["Cuádriceps", "Glúteos"] },
-  { id: "ex-curl-femoral", name: "Curl femoral sentado", priority: 1, function: "Flexión de rodilla", muscles: ["Isquiosurales"] },
-  { id: "ex-fly-maquina", name: "Fly en máquina", priority: null, function: "Pecho", muscles: ["Pecho"] },
-  { id: "ex-hip-thrust", name: "Hip thrust", priority: null, function: "Extensión de cadera / glúteo", muscles: ["Glúteos"] },
-  { id: "ex-elev-talon", name: "Elevaciones de talón", priority: null, function: "Pantorrilla", muscles: ["Pantorrillas"] },
+  { id: "ex-press-inclinado", name: "Press inclinado", priority: 10, function: "Press principal", muscles: ["Pecho", "Hombro", "Tríceps"] },
+  { id: "ex-dominadas", name: "Dominadas", priority: 10, function: "Tirón vertical", muscles: ["Dorsales", "Bíceps"] },
+  { id: "ex-remo-barra", name: "Remo con barra", priority: 10, function: "Tirón horizontal", muscles: ["Espalda alta", "Dorsales", "Erectores", "Bíceps"] },
+  { id: "ex-peso-muerto-rumano", name: "Peso muerto rumano", priority: 10, function: "Bisagra de cadera", muscles: ["Isquiosurales", "Glúteos", "Erectores"] },
+
+  // --- PRIORIDAD 8 - 9: Compuestos Secundarios / Variantes y Maquinaria Pesada ---
+  { id: "ex-jalon-pecho", name: "Jalón al pecho", priority: 9, function: "Tirón vertical en polea", muscles: ["Dorsales", "Bíceps"] },
+  { id: "ex-remo-t", name: "Remo en T", priority: 8, function: "Tirón horizontal apoyado", muscles: ["Espalda alta", "Dorsales", "Bíceps"] },
+  { id: "ex-hip-thrust", name: "Hip thrust", priority: 8, function: "Extensión de cadera / glúteo", muscles: ["Glúteos"] },
+  { id: "ex-bulgaras", name: "Sentadilla búlgara", priority: 8, function: "Unilateral / cuádriceps", muscles: ["Cuádriceps", "Glúteos"] },
+
+  // --- PRIORIDAD 5 - 6: Aislamiento / Accesorios de Grupos Grandes ---
+  { id: "ex-fly-maquina", name: "Fly en máquina", priority: 6, function: "Aislamiento de pecho", muscles: ["Pecho"] },
+  { id: "ex-ext-pierna", name: "Extensión de pierna en máquina", priority: 5, function: "Aislamiento de cuádriceps", muscles: ["Cuádriceps"] },
+  { id: "ex-curl-femoral", name: "Curl femoral sentado", priority: 5, function: "Flexión de rodilla", muscles: ["Isquiosurales"] },
+
+  // --- PRIORIDAD 3 - 4: Accesorios / Aislamiento de Músculos Pequeños ---
+  { id: "ex-elev-laterales", name: "Elevaciones laterales", priority: 4, function: "Aislamiento de hombro", muscles: ["Hombro"] },
+  { id: "ex-curl-predicador", name: "Curl predicador", priority: 3, function: "Aislamiento de bíceps", muscles: ["Bíceps"] },
+  { id: "ex-ext-triceps", name: "Extensión de tríceps sobre cabeza", priority: 3, function: "Aislamiento de tríceps", muscles: ["Tríceps"] },
+  { id: "ex-elev-talon", name: "Elevaciones de talón", priority: 2, function: "Aislamiento de pantorrilla", muscles: ["Pantorrillas"] },
 ];
 
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
