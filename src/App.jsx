@@ -7,6 +7,7 @@ import {
   Radar,
   ResponsiveContainer,
   Tooltip,
+  Legend,
 } from "recharts";
 import {
   Dumbbell,
@@ -33,41 +34,31 @@ import {
 const MUSCLES = [
   "Pecho",
   "Dorsales",
-  "Espalda alta",
-  "Hombro",
+  "Deltoide anterior",
+  "Deltoide lateral",
   "Bíceps",
   "Tríceps",
   "Cuádriceps",
-  "Isquiotibiales",
+  "Isquiosurales",
   "Glúteos",
   "Pantorrillas",
   "Erectores",
 ];
 
 const SEED_EXERCISES = [
-  // --- PRIORIDAD 10: Compuestos Pesados / Multiarticulares Principales ---
   { id: "ex-sentadilla", name: "Sentadilla", priority: 10, function: "Dominante de rodilla", muscles: ["Cuádriceps", "Glúteos"] },
-  { id: "ex-press-inclinado", name: "Press inclinado", priority: 10, function: "Press principal", muscles: ["Pecho", "Hombro", "Tríceps"] },
-  { id: "ex-dominadas", name: "Dominadas", priority: 10, function: "Tirón vertical", muscles: ["Dorsales", "Bíceps"] },
-  { id: "ex-remo-barra", name: "Remo con barra", priority: 10, function: "Tirón horizontal", muscles: ["Espalda alta", "Dorsales", "Erectores", "Bíceps"] },
-  { id: "ex-peso-muerto-rumano", name: "Peso muerto rumano", priority: 10, function: "Bisagra de cadera", muscles: ["Isquiosurales", "Glúteos", "Erectores"] },
-
-  // --- PRIORIDAD 8 - 9: Compuestos Secundarios / Variantes y Maquinaria Pesada ---
-  { id: "ex-jalon-pecho", name: "Jalón al pecho", priority: 9, function: "Tirón vertical en polea", muscles: ["Dorsales", "Bíceps"] },
-  { id: "ex-remo-t", name: "Remo en T", priority: 8, function: "Tirón horizontal apoyado", muscles: ["Espalda alta", "Dorsales", "Bíceps"] },
-  { id: "ex-hip-thrust", name: "Hip thrust", priority: 8, function: "Extensión de cadera / glúteo", muscles: ["Glúteos"] },
-  { id: "ex-bulgaras", name: "Sentadilla búlgara", priority: 8, function: "Unilateral / cuádriceps", muscles: ["Cuádriceps", "Glúteos"] },
-
-  // --- PRIORIDAD 5 - 6: Aislamiento / Accesorios de Grupos Grandes ---
-  { id: "ex-fly-maquina", name: "Fly en máquina", priority: 6, function: "Aislamiento de pecho", muscles: ["Pecho"] },
-  { id: "ex-ext-pierna", name: "Extensión de pierna en máquina", priority: 5, function: "Aislamiento de cuádriceps", muscles: ["Cuádriceps"] },
-  { id: "ex-curl-femoral", name: "Curl femoral sentado", priority: 5, function: "Flexión de rodilla", muscles: ["Isquiosurales"] },
-
-  // --- PRIORIDAD 3 - 4: Accesorios / Aislamiento de Músculos Pequeños ---
-  { id: "ex-elev-laterales", name: "Elevaciones laterales", priority: 4, function: "Aislamiento de hombro", muscles: ["Hombro"] },
-  { id: "ex-curl-predicador", name: "Curl predicador", priority: 3, function: "Aislamiento de bíceps", muscles: ["Bíceps"] },
-  { id: "ex-ext-triceps", name: "Extensión de tríceps sobre cabeza", priority: 3, function: "Aislamiento de tríceps", muscles: ["Tríceps"] },
-  { id: "ex-elev-talon", name: "Elevaciones de talón", priority: 2, function: "Aislamiento de pantorrilla", muscles: ["Pantorrillas"] },
+  { id: "ex-dominadas", name: "Dominadas", priority: 9, function: "Tirón vertical", muscles: ["Dorsales", "Bíceps"] },
+  { id: "ex-press-inclinado", name: "Press inclinado", priority: 8, function: "Press principal", muscles: ["Pecho", "Deltoide anterior", "Tríceps"] },
+  { id: "ex-peso-muerto-rumano", name: "Peso muerto rumano", priority: 7, function: "Bisagra", muscles: ["Isquiosurales", "Glúteos", "Erectores"] },
+  { id: "ex-remo-t", name: "Remo en T", priority: 6, function: "Tirón horizontal", muscles: ["Dorsales", "Bíceps"] },
+  { id: "ex-elev-laterales", name: "Elevaciones laterales", priority: 5, function: "Deltoide lateral", muscles: ["Deltoide lateral"] },
+  { id: "ex-curl-predicador", name: "Curl predicador", priority: 4, function: "Bíceps", muscles: ["Bíceps"] },
+  { id: "ex-ext-triceps", name: "Extensión de tríceps sobre cabeza", priority: 3, function: "Tríceps", muscles: ["Tríceps"] },
+  { id: "ex-bulgaras", name: "Búlgaras", priority: 2, function: "Unilateral / cuádriceps", muscles: ["Cuádriceps", "Glúteos"] },
+  { id: "ex-curl-femoral", name: "Curl femoral sentado", priority: 1, function: "Flexión de rodilla", muscles: ["Isquiosurales"] },
+  { id: "ex-fly-maquina", name: "Fly en máquina", priority: null, function: "Pecho", muscles: ["Pecho"] },
+  { id: "ex-hip-thrust", name: "Hip thrust", priority: null, function: "Extensión de cadera / glúteo", muscles: ["Glúteos"] },
+  { id: "ex-elev-talon", name: "Elevaciones de talón", priority: null, function: "Pantorrilla", muscles: ["Pantorrillas"] },
 ];
 
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -262,23 +253,125 @@ function TabButton({ active, onClick, icon: Icon, children }) {
    RADAR CHART
    ========================================================================= */
 
-function MuscleRadar({ data }) {
-  const maxVal = Math.max(4, ...data.map((d) => d.series));
+function MuscleRadar({ data, series }) {
+  const seriesConfig = series && series.length ? series : [{ dataKey: "series", name: "Series", color: "#E3B23C" }];
+  const maxVal = Math.max(4, ...data.flatMap((d) => seriesConfig.map((s) => Number(d[s.dataKey]) || 0)));
   const domainMax = Math.ceil((maxVal * 1.25) / 4) * 4;
+  const multi = seriesConfig.length > 1;
   return (
     <ResponsiveContainer width="100%" height={340}>
       <RadarChart data={data} outerRadius="72%">
         <PolarGrid stroke="#2C3037" />
         <PolarAngleAxis dataKey="muscle" tick={{ fill: "#9A9EA6", fontSize: 11 }} />
         <PolarRadiusAxis angle={90} domain={[0, domainMax]} tick={{ fill: "#5B5F68", fontSize: 9 }} tickCount={4} />
-        <Radar name="Series" dataKey="series" stroke="#E3B23C" fill="#E3B23C" fillOpacity={0.35} strokeWidth={2} />
-        <Tooltip
-          contentStyle={{ background: "#1D2025", border: "1px solid #2C3037", borderRadius: 6, fontSize: 12 }}
-          labelStyle={{ color: "#EDEDEE" }}
-          itemStyle={{ color: "#E3B23C" }}
-        />
+        {seriesConfig.map((s) => (
+          <Radar
+            key={s.dataKey}
+            name={s.name}
+            dataKey={s.dataKey}
+            stroke={s.color}
+            fill={s.color}
+            fillOpacity={multi ? 0.2 : 0.35}
+            strokeWidth={2}
+          />
+        ))}
+        {multi && <Legend wrapperStyle={{ fontSize: 12, color: "#C7CAD1" }} />}
+        <Tooltip contentStyle={{ background: "#1D2025", border: "1px solid #2C3037", borderRadius: 6, fontSize: 12 }} labelStyle={{ color: "#EDEDEE" }} />
       </RadarChart>
     </ResponsiveContainer>
+  );
+}
+
+/* =========================================================================
+   COMPARE TWO ROUTINES — overlaid radar
+   ========================================================================= */
+
+const COMPARE_COLORS = ["#E3B23C", "#4FA8E3"];
+
+function CompareRadarView({ state }) {
+  const options = useMemo(
+    () => [{ id: "week", name: "Semana completa" }, ...state.days.map((d) => ({ id: d.id, name: d.name }))],
+    [state.days]
+  );
+
+  const [aId, setAId] = useState(options[0]?.id ?? "week");
+  const [bId, setBId] = useState(options[1]?.id ?? options[0]?.id ?? "week");
+
+  useEffect(() => {
+    if (!options.some((o) => o.id === aId)) setAId(options[0]?.id ?? "week");
+    if (!options.some((o) => o.id === bId)) setBId(options[1]?.id ?? options[0]?.id ?? "week");
+  }, [options]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const volumeFor = (id) => {
+    if (id === "week") return volumeForWeek(state.schedule, state.days, state.exercises);
+    return volumeForDay(state.days.find((d) => d.id === id), state.exercises);
+  };
+
+  const dataA = useMemo(() => volumeFor(aId), [aId, state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dataB = useMemo(() => volumeFor(bId), [bId, state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const radarData = MUSCLES.map((m) => ({ muscle: m, a: dataA[m] || 0, b: dataB[m] || 0 }));
+  const nameA = options.find((o) => o.id === aId)?.name || "Rutina A";
+  const nameB = options.find((o) => o.id === bId)?.name || "Rutina B";
+  const seriesConfig = [
+    { dataKey: "a", name: nameA, color: COMPARE_COLORS[0] },
+    { dataKey: "b", name: nameB, color: COMPARE_COLORS[1] },
+  ];
+
+  if (options.length < 2) {
+    return <EmptyHint text="Crea al menos dos días (o una semana programada) para poder comparar." />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[
+          { value: aId, onChange: setAId, color: COMPARE_COLORS[0] },
+          { value: bId, onChange: setBId, color: COMPARE_COLORS[1] },
+        ].map((sel, i) => (
+          <label key={i} className="flex items-center gap-2 rounded-md border border-[#2C3037] bg-[#14161A] px-2.5 py-2">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: sel.color }} />
+            <select
+              value={sel.value}
+              onChange={(e) => sel.onChange(e.target.value)}
+              className="w-full bg-transparent text-sm text-[#EDEDEE] outline-none"
+            >
+              {options.map((o) => (
+                <option key={o.id} value={o.id} className="bg-[#14161A]">
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
+        <MuscleRadar data={radarData} series={seriesConfig} />
+      </div>
+
+      <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
+        <h3 className="mb-2 font-display text-sm uppercase tracking-wider text-[#8A8F98]">Diferencia por músculo</h3>
+        <div className="space-y-0.5">
+          {radarData.map((d) => {
+            const diff = d.a - d.b;
+            return (
+              <div key={d.muscle} className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm">
+                <span className="text-[#C7CAD1]">{d.muscle}</span>
+                <div className="flex items-center gap-3 font-mono text-[13px]">
+                  <span style={{ color: seriesConfig[0].color }}>{d.a}</span>
+                  <span className="text-[#5B5F68]">vs</span>
+                  <span style={{ color: seriesConfig[1].color }}>{d.b}</span>
+                  <span className={`w-12 text-right ${diff === 0 ? "text-[#5B5F68]" : diff > 0 ? "text-[#6FCF97]" : "text-[#E4572E]"}`}>
+                    {diff > 0 ? `+${diff}` : diff}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -960,6 +1053,7 @@ function SemanaTab({ state, handlers }) {
 }
 
 function AnalisisTab({ state, handlers }) {
+  const [view, setView] = useState("volumen");
   const [scope, setScope] = useState("week");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -976,90 +1070,118 @@ function AnalisisTab({ state, handlers }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-lg tracking-wide text-[#EDEDEE]">Análisis</h2>
-        <div className="flex items-center gap-2">
-          <select
-            value={scope}
-            onChange={(e) => setScope(e.target.value)}
-            className="rounded-md border border-[#2C3037] bg-[#14161A] px-2.5 py-2 text-sm text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
-          >
-            <option value="week">Semana completa</option>
-            {state.days.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setShowSettings((s) => !s)}
-            className="rounded-md border border-[#2C3037] p-2 text-[#9A9EA6] hover:bg-[#262A31]"
-            title="Configurar rangos de volumen"
-          >
-            <Settings size={16} />
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1 rounded-md border border-[#2C3037] p-1">
+            <button
+              onClick={() => setView("volumen")}
+              className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === "volumen" ? "bg-[#E3B23C] text-[#1A1B1E]" : "text-[#9A9EA6] hover:text-[#EDEDEE]"
+              }`}
+            >
+              Volumen
+            </button>
+            <button
+              onClick={() => setView("comparar")}
+              className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === "comparar" ? "bg-[#E3B23C] text-[#1A1B1E]" : "text-[#9A9EA6] hover:text-[#EDEDEE]"
+              }`}
+            >
+              Comparar
+            </button>
+          </div>
+          {view === "volumen" && (
+            <>
+              <select
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                className="rounded-md border border-[#2C3037] bg-[#14161A] px-2.5 py-2 text-sm text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
+              >
+                <option value="week">Semana completa</option>
+                {state.days.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowSettings((s) => !s)}
+                className="rounded-md border border-[#2C3037] p-2 text-[#9A9EA6] hover:bg-[#262A31]"
+                title="Configurar rangos de volumen"
+              >
+                <Settings size={16} />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {showSettings && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
-          <span className="text-sm text-[#8A8F98]">Umbrales de volumen (series por músculo):</span>
-          <label className="flex items-center gap-2 text-sm text-[#6FCF97]">
-            Bajo hasta
-            <input
-              type="number"
-              min={0}
-              value={state.volumeRanges.low}
-              onChange={(e) => handlers.updateVolumeRanges({ low: Number(e.target.value) })}
-              className="w-16 rounded-md border border-[#2C3037] bg-[#14161A] px-2 py-1 text-center font-mono text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-[#E3B23C]">
-            Moderado hasta
-            <input
-              type="number"
-              min={0}
-              value={state.volumeRanges.moderate}
-              onChange={(e) => handlers.updateVolumeRanges({ moderate: Number(e.target.value) })}
-              className="w-16 rounded-md border border-[#2C3037] bg-[#14161A] px-2 py-1 text-center font-mono text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
-            />
-          </label>
-          <span className="text-sm text-[#E4572E]">Alto en adelante</span>
-        </div>
-      )}
+      {view === "comparar" ? (
+        <CompareRadarView state={state} />
+      ) : (
+        <>
+          {showSettings && (
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
+              <span className="text-sm text-[#8A8F98]">Umbrales de volumen (series por músculo):</span>
+              <label className="flex items-center gap-2 text-sm text-[#6FCF97]">
+                Bajo hasta
+                <input
+                  type="number"
+                  min={0}
+                  value={state.volumeRanges.low}
+                  onChange={(e) => handlers.updateVolumeRanges({ low: Number(e.target.value) })}
+                  className="w-16 rounded-md border border-[#2C3037] bg-[#14161A] px-2 py-1 text-center font-mono text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[#E3B23C]">
+                Moderado hasta
+                <input
+                  type="number"
+                  min={0}
+                  value={state.volumeRanges.moderate}
+                  onChange={(e) => handlers.updateVolumeRanges({ moderate: Number(e.target.value) })}
+                  className="w-16 rounded-md border border-[#2C3037] bg-[#14161A] px-2 py-1 text-center font-mono text-[#EDEDEE] outline-none focus:border-[#E3B23C]"
+                />
+              </label>
+              <span className="text-sm text-[#E4572E]">Alto en adelante</span>
+            </div>
+          )}
 
-      {selectedDay && (
-        <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
-          <h3 className="mb-2 font-display text-base tracking-wide text-[#EDEDEE]">{selectedDay.name}</h3>
-          <div className="space-y-1.5">
-            {selectedDay.exercises.map((we) => {
-              const ex = state.exercises.find((e) => e.id === we.exerciseId);
-              if (!ex) return null;
-              const reps = we.repsMin === we.repsMax ? we.repsMin : `${we.repsMin}–${we.repsMax}`;
-              return (
-                <div key={we.id} className="flex items-center justify-between rounded-md bg-[#14161A] px-3 py-2 text-sm">
-                  <span className="text-[#EDEDEE]">{ex.name}</span>
-                  <span className="font-mono text-[#8A8F98]">
-                    {we.sets} × {reps}
-                    {we.rir ? ` · RIR ${we.rir}` : ""}
-                  </span>
-                </div>
-              );
-            })}
-            {selectedDay.exercises.length === 0 && <EmptyHint text="Este día no tiene ejercicios." />}
-          </div>
-        </div>
-      )}
+          {selectedDay && (
+            <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
+              <h3 className="mb-2 font-display text-base tracking-wide text-[#EDEDEE]">{selectedDay.name}</h3>
+              <div className="space-y-1.5">
+                {selectedDay.exercises.map((we) => {
+                  const ex = state.exercises.find((e) => e.id === we.exerciseId);
+                  if (!ex) return null;
+                  const reps = we.repsMin === we.repsMax ? we.repsMin : `${we.repsMin}–${we.repsMax}`;
+                  return (
+                    <div key={we.id} className="flex items-center justify-between rounded-md bg-[#14161A] px-3 py-2 text-sm">
+                      <span className="text-[#EDEDEE]">{ex.name}</span>
+                      <span className="font-mono text-[#8A8F98]">
+                        {we.sets} × {reps}
+                        {we.rir ? ` · RIR ${we.rir}` : ""}
+                      </span>
+                    </div>
+                  );
+                })}
+                {selectedDay.exercises.length === 0 && <EmptyHint text="Este día no tiene ejercicios." />}
+              </div>
+            </div>
+          )}
 
-      <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
-        <h3 className="mb-1 font-display text-sm uppercase tracking-wider text-[#8A8F98]">Volumen muscular</h3>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <MuscleRadar data={radarData} />
-          <div className="flex flex-col justify-center">
-            {radarData.map((d) => (
-              <VolumeBar key={d.muscle} label={d.muscle} value={d.series} ranges={state.volumeRanges} />
-            ))}
+          <div className="rounded-xl border border-[#2C3037] bg-[#181A1F] p-4">
+            <h3 className="mb-1 font-display text-sm uppercase tracking-wider text-[#8A8F98]">Volumen muscular</h3>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <MuscleRadar data={radarData} />
+              <div className="flex flex-col justify-center">
+                {radarData.map((d) => (
+                  <VolumeBar key={d.muscle} label={d.muscle} value={d.series} ranges={state.volumeRanges} />
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
