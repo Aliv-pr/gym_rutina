@@ -34,6 +34,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # --- PASO PARA SOLUCIONAR LA CACHÉ ---
+      - name: Prevent index.html caching
+        run: |
+          echo "/*" > dist/_headers
+          echo "  Cache-Control: max-age=0, no-cache, no-store, must-revalidate" >> dist/_headers
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
